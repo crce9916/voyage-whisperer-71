@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { VoiceInput } from "@/components/VoiceInput";
 import { api, MoodboardAnalysis } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 import { 
@@ -21,17 +22,50 @@ import {
   Mountain,
   Heart,
   Utensils,
-  Building
+  Building,
+  Wand2,
+  Mic
 } from "lucide-react";
 
 const MoodboardAnalyzer = () => {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
   const [analysis, setAnalysis] = useState<MoodboardAnalysis | null>(null);
   const [images, setImages] = useState<File[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [description, setDescription] = useState("");
+
+  const generateSampleMoodboard = async () => {
+    setIsGenerating(true);
+    try {
+      // Simulate AI generating a sample moodboard
+      const themes = [
+        { theme: "Tropical Paradise", description: "Beach resorts, palm trees, crystal clear waters, sunset cocktails" },
+        { theme: "European Culture", description: "Historic architecture, art museums, cobblestone streets, cozy cafes" },
+        { theme: "Mountain Adventure", description: "Hiking trails, snow peaks, alpine lakes, outdoor camping" },
+        { theme: "Urban Explorer", description: "Skyscrapers, street art, rooftop bars, food markets" },
+        { theme: "Romantic Getaway", description: "Candlelit dinners, wine tastings, scenic viewpoints, luxury spas" }
+      ];
+      
+      const randomTheme = themes[Math.floor(Math.random() * themes.length)];
+      setDescription(randomTheme.description);
+      
+      toast({
+        title: "Sample Moodboard Generated!",
+        description: `Created "${randomTheme.theme}" theme. Upload images or proceed with this description.`,
+      });
+    } catch (error) {
+      toast({
+        title: "Generation Error",
+        description: "Failed to generate sample moodboard.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
   const handleImageUpload = (files: FileList | null) => {
     if (!files) return;
@@ -113,10 +147,40 @@ const MoodboardAnalyzer = () => {
           <h1 className="text-4xl font-bold text-gradient-hero mb-4">
             Moodboard Analyzer
           </h1>
-          <p className="text-xl text-foreground-muted max-w-3xl mx-auto">
+          <p className="text-xl text-foreground-muted max-w-3xl mx-auto mb-6">
             Upload your travel inspiration images and let our AI analyze them to suggest 
             perfect destinations that match your style
           </p>
+          
+          {/* Quick Actions */}
+          <div className="flex flex-wrap gap-4 justify-center">
+            <Button
+              onClick={generateSampleMoodboard}
+              disabled={isGenerating}
+              className="btn-hero"
+              size="lg"
+            >
+              {isGenerating ? (
+                <>
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                  Generating...
+                </>
+              ) : (
+                <>
+                  <Wand2 className="mr-2 h-5 w-5" />
+                  Generate Sample Theme
+                </>
+              )}
+            </Button>
+            <Button
+              variant="outline"
+              size="lg"
+              onClick={() => window.location.href = '/voice-planner'}
+            >
+              <Mic className="mr-2 h-5 w-5" />
+              Use Voice Instead
+            </Button>
+          </div>
         </div>
 
         <div className="grid lg:grid-cols-2 gap-8">
@@ -187,7 +251,13 @@ const MoodboardAnalyzer = () => {
 
               {/* Description */}
               <div>
-                <Label>Additional Context (Optional)</Label>
+                <Label className="flex items-center justify-between mb-2">
+                  <span>Additional Context (Optional)</span>
+                  <VoiceInput 
+                    onResult={(text) => setDescription(text)}
+                    placeholder="travel description"
+                  />
+                </Label>
                 <Textarea
                   placeholder="Describe what kind of trip you're dreaming of..."
                   value={description}
